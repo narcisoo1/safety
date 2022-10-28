@@ -29,7 +29,7 @@ def selector():
 	if(op==1):
 		return VideoStream().start()
 	elif(op==2):
-		return FileVideoStream(path='Drowsiness-Detection-master/Tentativa1.mp4').start()
+		return FileVideoStream(path='Drowsiness-Detection-master/Video-Alinhado.mp4').start()
 
 style.use('fivethirtyeight')
 # Creating the dataset 
@@ -69,7 +69,7 @@ FRAME_COUNT = 0
 print("[INFO]Loading the predictor.....")
 detector = dlib.get_frontal_face_detector() 
 #print(args["shape_predictor"])
-predictor = dlib.shape_predictor('./shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('dlib/shape_predictor_68_face_landmarks.dat')
 #predictor = dlib.shape_predictor(args["shape_predictor"])
 
 
@@ -91,6 +91,7 @@ time.sleep(0.1)
 assure_path_exists("dataset/")
 count_sleep = 0
 count_yawn = 0 
+count_noFace = 0
 
 # Now, loop over all the frames and detect the faces
 while True:
@@ -108,7 +109,12 @@ while True:
 	rects = detector(frame, 1)
 	
 	#print (dlib.DLIB_USE_CUDA)
-
+	#print(len(rects))
+	if(len(rects)==0):
+		count_noFace+=1
+		cv2.imwrite("dataset/frame_noFace%d.jpg" % count_noFace, frame)
+		cv2.putText(frame, "VERIFIQUE O ENQUADRAMENTO!", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+	
 	# Now loop over all the face detections and apply the predictor 
 	for (i, rect) in enumerate(rects):
 
@@ -176,9 +182,9 @@ while True:
 		if MAR > MAR_THRESHOLD:
 			count_yawn += 1
 			cv2.drawContours(frame, [mouth], -1, (0, 0, 255), 1) 
-			cv2.putText(frame, "DROWSINESS ALERT!", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 			# Add the frame to the dataset ar a proof of drowsy driving
 			cv2.imwrite("dataset/frame_yawn%d.jpg" % count_yawn, frame)
+			cv2.putText(frame, "DROWSINESS ALERT!", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 			#T = Thread(target=alerta,args=('alarm',))
 			#T.start()
 			#T = Thread(target=alerta,args=('warning_yawn',))
